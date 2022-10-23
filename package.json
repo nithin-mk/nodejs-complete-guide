@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "start": "nodemon app.js"
   },
   "repository": {
@@ -23,6 +23,8 @@
     "multer": "^1.4.0"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.0.2",
     "nodemon": "^1.18.4"
   }
 }
