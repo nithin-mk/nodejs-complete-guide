@@ -7,6 +7,8 @@ const stripe = require('stripe')(process.env.STRIPE_KEY);
 const Product = require('../models/product');
 const Order = require('../models/order');
 
+const { minioClient, bucket } = require('../util/minio');
+
 const ITEMS_PER_PAGE = 2;
 
 exports.getProducts = (req, res, next) => {
@@ -22,16 +24,25 @@ exports.getProducts = (req, res, next) => {
         .limit(ITEMS_PER_PAGE);
     })
     .then(products => {
-      res.render('shop/product-list', {
-        prods: products,
-        pageTitle: 'Products',
-        path: '/products',
-        currentPage: page,
-        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
-        hasPreviousPage: page > 1,
-        nextPage: page + 1,
-        previousPage: page - 1,
-        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
+      const x = products.map(product => {
+        const imageUrl = product.imageUrl;
+        const destinationObject = imageUrl.split('/')[1];
+        return minioClient.fGetObject(bucket, destinationObject, imageUrl).then(() => {
+          console.log('Object ' + destinationObject + ' in bucket ' + bucket + ' downloaded as file ' + imageUrl);
+        });
+      });
+      return Promise.all(x).then(y => {
+        res.render('shop/product-list', {
+          prods: products,
+          pageTitle: 'Products',
+          path: '/products',
+          currentPage: page,
+          hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+          hasPreviousPage: page > 1,
+          nextPage: page + 1,
+          previousPage: page - 1,
+          lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
+        });  
       });
     })
     .catch(err => {
@@ -45,10 +56,16 @@ exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
   Product.findById(prodId)
     .then(product => {
-      res.render('shop/product-detail', {
-        product: product,
-        pageTitle: product.title,
-        path: '/products'
+      const imageUrl = product.imageUrl;
+      const destinationObject = imageUrl.split('/')[1];
+      return minioClient.fGetObject(bucket, destinationObject, imageUrl).then(() => {
+        console.log('Object ' + destinationObject + ' in bucket ' + bucket + ' downloaded as file ' + imageUrl);
+
+        res.render('shop/product-detail', {
+          product: product,
+          pageTitle: product.title,
+          path: '/products'
+        });  
       });
     })
     .catch(err => {
@@ -71,16 +88,25 @@ exports.getIndex = (req, res, next) => {
         .limit(ITEMS_PER_PAGE);
     })
     .then(products => {
-      res.render('shop/index', {
-        prods: products,
-        pageTitle: 'Shop',
-        path: '/',
-        currentPage: page,
-        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
-        hasPreviousPage: page > 1,
-        nextPage: page + 1,
-        previousPage: page - 1,
-        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
+      const x = products.map(product => {
+        const imageUrl = product.imageUrl;
+        const destinationObject = imageUrl.split('/')[1];
+        return minioClient.fGetObject(bucket, destinationObject, imageUrl).then(() => {
+          console.log('Object ' + destinationObject + ' in bucket ' + bucket + ' downloaded as file ' + imageUrl);
+        });
+      });
+      return Promise.all(x).then(y => {
+        res.render('shop/index', {
+          prods: products,
+          pageTitle: 'Shop',
+          path: '/',
+          currentPage: page,
+          hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+          hasPreviousPage: page > 1,
+          nextPage: page + 1,
+          previousPage: page - 1,
+          lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
+        });  
       });
     })
     .catch(err => {
