@@ -6,6 +6,9 @@
     <body>
         <%- include('../includes/navigation.ejs') %>
         <main>
+            <% if (errorMessage) { %>
+                <div class="user-message user-message--error"><%= errorMessage %></div>
+            <% } %>
             <ul class="cart__item-list">
                 <% products.forEach(p => { %>
                     <li class="cart__item">
@@ -14,6 +17,7 @@
                     </li>
                 <% }) %>
             </ul>
+            <% if (stripePublishableKey) { %>
             <div class="centered">
                 <h2>Total: <%= totalSum %></h2>
             </div>
@@ -21,7 +25,7 @@
                 <form action="/create-order" method="POST">
                     <script
                       src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-                      data-key="pk_test_51Lv0PFCNCu7ehlNQ7nHrgRl6sgJtiImRR9mswTDrC6Fg5oxl7On4svporo0A2LuXNhZvkgS3H7x4rgu9r71snQ1T00B5UxRQvF"
+                      data-key="<%= stripePublishableKey %>"
                       data-amount="<%= totalSum * 100 %>"
                       data-name="Your Order"
                       data-description="All the items you ordewred"
@@ -31,5 +35,6 @@
                     </script>
                   </form>
             </div>
+            <% } %>
         </main>
         <%- include('../includes/end.ejs') %>

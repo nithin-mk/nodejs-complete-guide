@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "ES2015",
+    "lib": ["ES2017", "DOM"],
+    "outDir": "./public/js",
+    "rootDir": "./src/client",
+    "noEmit": false
+  },
+  "include": ["src/client/**/*.ts"],
+  "exclude": []
+}

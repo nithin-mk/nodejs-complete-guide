@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nodejs-shop",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-r", "dotenv/config", "app.js"],
+      "port": 3000
+    }
+  ]
+}

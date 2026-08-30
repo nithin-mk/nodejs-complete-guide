@@ -2,20 +2,65 @@
   "name": "nodejs-complete-guide",
   "version": "1.0.0",
   "description": "Complete Node.js Guide",
-  "main": "app.js",
+  "main": "src/app.ts",
   "engines": {
-    "node": "14.19.2"
+    "node": ">=22"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production MONGO_USER=maximilian MONGO_PASSWORD=9u4biljMQc4jjqbe MONGO_DEFAULT_DATABASE=shop STRIPE_KEY=sk_test_51Lv0PFCNCu7ehlNQBTekyxdydgbcaBo3yW3PsEe1WBdu37Kyl9cOGDDml4GZvffo8Uoco0RmJovLUX2gv5rtnstF00tbh7X2K9 node app.js",
-    "start-server": "node app.js",
-    "start:dev": "nodemon app.js"
+    "test": "mocha",
+    "coverage": "c8 --include=src/controllers/**/*.ts --include=src/middleware/**/*.ts --include=src/models/**/*.ts --include=src/util/**/*.ts mocha",
+    "coverage:check": "c8 --check-coverage --lines 80 --functions 80 --branches 80 --statements 80 --include=src/controllers/**/*.ts --include=src/middleware/**/*.ts --include=src/models/**/*.ts --include=src/util/**/*.ts mocha",
+    "start": "node --env-file=.env -r tsx/cjs src/app.ts",
+    "start-server": "node --env-file=.env -r tsx/cjs src/app.ts",
+    "start:dev": "nodemon",
+    "build": "tsc --noEmit && npm run build:client",
+    "build:client": "esbuild src/client/admin.ts src/client/main.ts --bundle=false --platform=browser --target=es2017 --outdir=public/js",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json --noEmit"
+  },
+  "c8": {
+    "include": [
+      "src/controllers/**/*.ts",
+      "src/middleware/**/*.ts",
+      "src/models/**/*.ts",
+      "src/util/**/*.ts"
+    ],
+    "exclude": [
+      "src/client/**",
+      "src/types/**"
+    ],
+    "reporter": ["text", "lcov"]
   },
   "author": "Maximilian Schwarzmüller",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^1.18.3"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/body-parser": "^1.19.6",
+    "@types/chai": "^5.2.3",
+    "@types/compression": "^1.8.1",
+    "@types/connect-flash": "^0.0.40",
+    "@types/connect-mongodb-session": "^2.4.8",
+    "@types/csurf": "^1.11.5",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^4.17.25",
+    "@types/express-session": "^1.19.0",
+    "@types/helmet": "^0.0.48",
+    "@types/mocha": "^10.0.10",
+    "@types/mongoose": "^5.11.96",
+    "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^26.3.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pdfkit": "^0.17.6",
+    "@types/sinon": "^22.0.0",
+    "@types/stripe": "^8.0.416",
+    "c8": "^12.0.0",
+    "chai": "^4.5.0",
+    "esbuild": "^0.28.2",
+    "mocha": "^9.2.2",
+    "nodemon": "^1.18.3",
+    "sinon": "^14.0.2",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -24,23 +69,19 @@
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^2.0.3",
     "csurf": "^1.9.0",
+    "dotenv": "^17.4.2",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
-    "express-handlebars": "^3.0.0",
     "express-session": "^1.15.6",
     "express-validator": "^5.3.0",
     "helmet": "^3.14.0",
-    "minio": "^6.0.0",
-    "mongodb": "^3.1.6",
+    "minio": "^8.0.7",
     "mongoose": "^5.2.17",
     "morgan": "^1.9.1",
     "multer": "^1.4.0",
-    "mysql2": "^1.6.1",
     "nodemailer": "^4.6.8",
     "nodemailer-sendgrid-transport": "^0.2.0",
     "pdfkit": "^0.8.3",
-    "pug": "^2.0.3",
-    "sequelize": "^5.0.0-beta.11",
     "stripe": "^6.12.1"
   }
 }

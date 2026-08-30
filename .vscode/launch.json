@@ -17,10 +17,9 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/app.js",
+            "program": "${workspaceFolder}/src/app.ts",
             "restart": true,
             "runtimeExecutable": "nodemon",
-            "runtimeVersion": "14",
             "console": "integratedTerminal"
         }
     ]

@@ -2,3 +2,15 @@ node_modules
 server.cert
 server.key
 *.log
+.env
+dist/
+nodemon.json
+coverage/
+.nyc_output/
+images/
+data/
+public/js/
+.DS_Store
+Thumbs.db
+.codegraph/
+.cursor/
