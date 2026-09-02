@@ -66,19 +66,21 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Copy `.env.example` to `.env` and fill in the values.
 
-| Variable                 | Required | Description                              |
-| ------------------------ | -------- | ---------------------------------------- |
-| `MONGODB_URI`            | Yes      | MongoDB connection string                |
-| `SESSION_SECRET`         | Yes      | Long random string for session signing   |
-| `MINIO_ENDPOINT`         | Yes      | MinIO hostname (e.g. `127.0.0.1`)        |
-| `MINIO_PORT`             | Yes      | MinIO port (default `9000`)              |
-| `MINIO_SECURE`           | Yes      | `true` for HTTPS, `false` for plain HTTP |
-| `MINIO_ACCESS_KEY`       | Yes      | MinIO access key                         |
-| `MINIO_SECRET_KEY`       | Yes      | MinIO secret key                         |
-| `MINIO_BUCKET`           | Yes      | Bucket name (created automatically)      |
-| `STRIPE_PUBLISHABLE_KEY` | Yes      | Stripe publishable key (`pk_test_…`)     |
-| `STRIPE_SECRET_KEY`      | Yes      | Stripe secret key (`sk_test_…`)          |
-| `SENDGRID_API_KEY`       | No       | SendGrid key for password-reset emails   |
+| Variable                 | Required | Description                                                                                                                |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URI`            | Yes      | MongoDB connection string                                                                                                  |
+| `SESSION_SECRET`         | Yes      | Long random string for session signing                                                                                     |
+| `APP_BASE_URL`           | No       | Public base URL used to build absolute links in emails (e.g. the password-reset link); defaults to `http://localhost:3000` |
+| `MINIO_ENDPOINT`         | Yes      | MinIO hostname (e.g. `127.0.0.1`)                                                                                          |
+| `MINIO_PORT`             | Yes      | MinIO port (default `9000`)                                                                                                |
+| `MINIO_SECURE`           | Yes      | `true` for HTTPS, `false` for plain HTTP                                                                                   |
+| `MINIO_ACCESS_KEY`       | Yes      | MinIO access key                                                                                                           |
+| `MINIO_SECRET_KEY`       | Yes      | MinIO secret key                                                                                                           |
+| `MINIO_BUCKET`           | Yes      | Bucket name (created automatically)                                                                                        |
+| `STRIPE_PUBLISHABLE_KEY` | Yes      | Stripe publishable key (`pk_test_…`)                                                                                       |
+| `STRIPE_SECRET_KEY`      | Yes      | Stripe secret key (`sk_test_…`)                                                                                            |
+| `SENDGRID_API_KEY`       | No       | SendGrid key for password-reset emails                                                                                     |
+| `SENDGRID_FROM_EMAIL`    | No       | Verified sender address for password-reset emails — no default, must be set to send them                                   |
 
 ## NPM Scripts
 

@@ -164,13 +164,14 @@ export const postReset = (req: Request, res: Response, next: NextFunction): void
       })
       .then(() => {
         res.redirect('/');
+        const resetUrl = `${process.env.APP_BASE_URL || 'http://localhost:3000'}/reset/${token}`;
         transporter.sendMail({
           to: req.body.email,
-          from: 'nithinmkurien@gmail.com',
+          from: process.env.SENDGRID_FROM_EMAIL,
           subject: 'Password reset',
           html: `
             <p>You requested a password reset</p>
-            <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to set a new password.</p>
+            <p>Click this <a href="${resetUrl}">link</a> to set a new password.</p>
           `
         });
       })
