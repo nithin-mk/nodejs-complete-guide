@@ -15,7 +15,13 @@
     "start:dev": "nodemon",
     "build": "tsc --noEmit && npm run build:client",
     "build:client": "esbuild src/client/admin.ts src/client/main.ts --bundle=false --platform=browser --target=es2017 --outdir=public/js",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json --noEmit"
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "c8": {
     "include": [
@@ -28,11 +34,16 @@
       "src/client/**",
       "src/types/**"
     ],
-    "reporter": ["text", "lcov"]
+    "reporter": [
+      "text",
+      "lcov"
+    ]
   },
   "author": "Maximilian Schwarzmüller",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/body-parser": "^1.19.6",
     "@types/chai": "^5.2.3",
@@ -56,11 +67,15 @@
     "c8": "^12.0.0",
     "chai": "^4.5.0",
     "esbuild": "^0.28.2",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
     "mocha": "^9.2.2",
     "nodemon": "^1.18.3",
+    "prettier": "^3.9.6",
     "sinon": "^14.0.2",
     "tsx": "^4.23.12",
-    "typescript": "^7.0.2"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.69.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -1,0 +1,230 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # ── Lint & format ────────────────────────────────────────────────────────
+  lint:
+    name: Lint & format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier format check
+        run: npm run format:check
+
+  # ── Typecheck & build ────────────────────────────────────────────────────
+  build:
+    name: Typecheck & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (server + client)
+        run: npm run typecheck
+
+      - name: Build client bundle
+        run: npm run build:client
+
+      - name: Upload built client assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-js
+          path: public/js/
+          retention-days: 7
+
+  # ── Unit tests (Mocha) + coverage ────────────────────────────────────────
+  unit-tests:
+    name: Unit tests & coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Mocha tests mock Mongoose/MinIO and run entirely in-process —
+      # no live database or object storage needed.
+      - name: Run unit tests with coverage (fails below 80%)
+        run: npm run coverage:check
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+  # ── End-to-end tests (Playwright) ────────────────────────────────────────
+  e2e-tests:
+    name: E2E tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright OS dependencies only (cache hit)
+        run: npx playwright install-deps chromium webkit
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+
+      # Mirrors compose.yaml (MongoDB + MinIO) so the app runs exactly as it
+      # does in local development — no mocking, full stack.
+      - name: Start MongoDB + MinIO
+        run: docker compose up -d
+
+      - name: Wait for MongoDB + MinIO to be healthy
+        run: |
+          for i in $(seq 1 30); do
+            mongo_ok=""
+            minio_ok=""
+            docker compose exec -T mongo mongosh --quiet --eval "db.runCommand('ping').ok" > /dev/null 2>&1 && mongo_ok=1
+            curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1 && minio_ok=1
+            echo "attempt $i: mongo=${mongo_ok:-no} minio=${minio_ok:-no}"
+            if [ -n "$mongo_ok" ] && [ -n "$minio_ok" ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Services did not become healthy in time" >&2
+          docker compose logs
+          exit 1
+
+      # Neither a real Stripe nor a real SendGrid account is required: the
+      # e2e suite only checks that the Stripe Checkout widget renders
+      # (publishable key only, no charge is made) and that the password
+      # reset flow behaves correctly without actually delivering email.
+      - name: Write .env for CI
+        run: |
+          cat > .env <<'EOF'
+          MONGODB_URI=mongodb://127.0.0.1:27017/shop
+          SESSION_SECRET=ci-test-secret
+          MINIO_ENDPOINT=127.0.0.1
+          MINIO_PORT=9000
+          MINIO_SECURE=false
+          MINIO_ACCESS_KEY=minioadmin
+          MINIO_SECRET_KEY=minioadmin
+          MINIO_BUCKET=nodejs-complete-guide
+          STRIPE_PUBLISHABLE_KEY=pk_test_ci_placeholder
+          STRIPE_SECRET_KEY=sk_test_ci_placeholder
+          SENDGRID_API_KEY=SG.ci_placeholder
+          EOF
+
+      - name: Build client bundle
+        run: npm run build:client
+
+      - name: Start app server
+        run: |
+          nohup node --env-file=.env -r tsx/cjs src/app.ts > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "App server did not start in time" >&2
+          cat server.log
+          exit 1
+
+      - name: Run Playwright tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 14
+
+      - name: Upload app server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log
+          retention-days: 7
+
+      - name: Stop MongoDB + MinIO
+        if: always()
+        run: docker compose down -v
+
+  # ── Aggregate status for branch protection ──────────────────────────────
+  ci-success:
+    name: CI success
+    if: always()
+    needs: [lint, build, unit-tests, e2e-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs succeeded
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || \
+             [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "One or more required jobs failed." >&2
+            exit 1
+          fi
+          echo "All jobs passed."

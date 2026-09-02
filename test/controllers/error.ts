@@ -6,9 +6,14 @@ import * as ErrorController from '../../src/controllers/error';
 function makeRes() {
   let code: number;
   const res: any = {
-    status(c: number) { code = c; return res; },
+    status(c: number) {
+      code = c;
+      return res;
+    },
     render: sinon.spy(),
-    statusCode() { return code; }
+    statusCode() {
+      return code;
+    }
   };
   return res;
 }

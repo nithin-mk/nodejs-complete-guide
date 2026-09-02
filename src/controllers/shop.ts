@@ -7,7 +7,7 @@ import Stripe from 'stripe';
 
 import Product from '../models/product';
 import Order from '../models/order';
-import { minioClient, bucket } from '../util/minio';
+import { downloadImageIfMissing } from '../util/minio';
 
 const stripe: Stripe | null = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2020-08-27' })
@@ -28,12 +28,7 @@ export const getProducts = (req: Request, res: Response, next: NextFunction): vo
         .limit(ITEMS_PER_PAGE);
     })
     .then(products => {
-      const downloads = products.map(product => {
-        const destinationObject = product.imageUrl.split('/')[1];
-        return minioClient.fGetObject(bucket, destinationObject, product.imageUrl).then(() => {
-          console.log('Downloaded ' + destinationObject);
-        });
-      });
+      const downloads = products.map(product => downloadImageIfMissing(product.imageUrl));
       return Promise.all(downloads).then(() => {
         res.render('shop/product-list', {
           prods: products,
@@ -56,8 +51,7 @@ export const getProduct = (req: Request, res: Response, next: NextFunction): voi
   Product.findById(prodId)
     .then(product => {
       if (!product) return next(new Error('Product not found.'));
-      const destinationObject = product.imageUrl.split('/')[1];
-      return minioClient.fGetObject(bucket, destinationObject, product.imageUrl).then(() => {
+      return downloadImageIfMissing(product.imageUrl).then(() => {
         res.render('shop/product-detail', {
           product,
           pageTitle: product.title,
@@ -81,12 +75,7 @@ export const getIndex = (req: Request, res: Response, next: NextFunction): void 
         .limit(ITEMS_PER_PAGE);
     })
     .then(products => {
-      const downloads = products.map(product => {
-        const destinationObject = product.imageUrl.split('/')[1];
-        return minioClient.fGetObject(bucket, destinationObject, product.imageUrl).then(() => {
-          console.log('Downloaded ' + destinationObject);
-        });
-      });
+      const downloads = products.map(product => downloadImageIfMissing(product.imageUrl));
       return Promise.all(downloads).then(() => {
         res.render('shop/index', {
           prods: products,
@@ -136,7 +125,8 @@ export const postCart = (req: Request, res: Response, next: NextFunction): void 
 
 export const postCartDeleteProduct = (req: Request, res: Response, next: NextFunction): void => {
   const prodId: string = req.body.productId;
-  req.user.removeFromCart(prodId)
+  req.user
+    .removeFromCart(prodId)
     .then(() => {
       res.redirect('/cart');
     })

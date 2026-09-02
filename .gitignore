@@ -14,3 +14,8 @@ public/js/
 Thumbs.db
 .codegraph/
 .cursor/
+.idea/
+playwright-report/
+test-results/
+blob-report/
+.last-run.json

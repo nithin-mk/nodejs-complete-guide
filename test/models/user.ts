@@ -52,7 +52,10 @@ describe('User Model', function () {
     it('should leave other products intact when removing one', async function () {
       const removeId = new mongoose.Types.ObjectId();
       const keepId = new mongoose.Types.ObjectId();
-      user.cart.items = [{ productId: removeId, quantity: 1 }, { productId: keepId, quantity: 3 }];
+      user.cart.items = [
+        { productId: removeId, quantity: 1 },
+        { productId: keepId, quantity: 3 }
+      ];
       await user.removeFromCart(removeId.toString());
       expect(user.cart.items).to.have.length(1);
       expect(user.cart.items[0].productId.toString()).to.equal(keepId.toString());

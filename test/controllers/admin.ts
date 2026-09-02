@@ -5,7 +5,9 @@ import Product from '../../src/models/product';
 import { minioClient } from '../../src/util/minio';
 import * as AdminController from '../../src/controllers/admin';
 
-afterEach(function () { sinon.restore(); });
+afterEach(function () {
+  sinon.restore();
+});
 
 // ── getAddProduct ───────────────────────────────────────────────────────────
 
@@ -26,7 +28,8 @@ describe('Admin Controller - postAddProduct', function () {
     const res: any = { status: sinon.stub().returnsThis(), render: sinon.spy() };
     AdminController.postAddProduct(
       { body: { title: 'T', price: 10, description: 'D' }, file: undefined } as any,
-      res, () => {}
+      res,
+      () => {}
     );
     expect(res.status.calledWith(422)).to.be.true;
     expect(res.render.calledWith('admin/edit-product')).to.be.true;
@@ -37,7 +40,9 @@ describe('Admin Controller - postAddProduct', function () {
     const req: any = {
       body: { title: '', price: 0, description: '' },
       file: { filename: 'x.jpg', path: '/tmp/x.jpg', mimetype: 'image/jpeg' },
-      _validationErrors: [{ param: 'title', msg: 'Title is required.', value: '', location: 'body' }]
+      _validationErrors: [
+        { param: 'title', msg: 'Title is required.', value: '', location: 'body' }
+      ]
     };
     AdminController.postAddProduct(req, res, () => {});
     expect(res.status.calledWith(422)).to.be.true;
@@ -81,7 +86,8 @@ describe('Admin Controller - getEditProduct', function () {
     const res: any = { redirect: sinon.spy() };
     AdminController.getEditProduct(
       { query: {}, params: { productId: 'p1' } } as any,
-      res, () => {}
+      res,
+      () => {}
     );
     expect(res.redirect.calledWith('/')).to.be.true;
   });
@@ -91,7 +97,8 @@ describe('Admin Controller - getEditProduct', function () {
     const res: any = { redirect: sinon.spy() };
     AdminController.getEditProduct(
       { query: { edit: 'true' }, params: { productId: 'p1' } } as any,
-      res, () => {}
+      res,
+      () => {}
     );
     setTimeout(() => {
       expect(res.redirect.calledWith('/')).to.be.true;
@@ -100,12 +107,19 @@ describe('Admin Controller - getEditProduct', function () {
   });
 
   it('should render admin/edit-product when product is found', function (done) {
-    const fakeProduct = { _id: 'p1', title: 'Widget', price: 9.99, description: 'A', imageUrl: 'images/x.jpg' };
+    const fakeProduct = {
+      _id: 'p1',
+      title: 'Widget',
+      price: 9.99,
+      description: 'A',
+      imageUrl: 'images/x.jpg'
+    };
     sinon.stub(Product, 'findById').returns(Promise.resolve(fakeProduct) as any);
     const res: any = { render: sinon.spy() };
     AdminController.getEditProduct(
       { query: { edit: 'true' }, params: { productId: 'p1' } } as any,
-      res, () => {}
+      res,
+      () => {}
     );
     setTimeout(() => {
       expect(res.render.calledWith('admin/edit-product')).to.be.true;
@@ -119,7 +133,10 @@ describe('Admin Controller - getEditProduct', function () {
     AdminController.getEditProduct(
       { query: { edit: 'true' }, params: { productId: 'p1' } } as any,
       {} as any,
-      (err: any) => { expect(err).to.be.an('error'); done(); }
+      (err: any) => {
+        expect(err).to.be.an('error');
+        done();
+      }
     );
   });
 });
@@ -132,7 +149,9 @@ describe('Admin Controller - postEditProduct', function () {
     const req: any = {
       body: { productId: 'p1', title: '', price: 0, description: '' },
       file: undefined,
-      _validationErrors: [{ param: 'title', msg: 'Title is required.', value: '', location: 'body' }],
+      _validationErrors: [
+        { param: 'title', msg: 'Title is required.', value: '', location: 'body' }
+      ],
       csrfToken: () => 'token'
     };
     AdminController.postEditProduct(req, res, () => {});
@@ -142,7 +161,11 @@ describe('Admin Controller - postEditProduct', function () {
 
   it('should call next when product is not found', function (done) {
     sinon.stub(Product, 'findById').returns(Promise.resolve(null) as any);
-    const res: any = { status: sinon.stub().returnsThis(), json: sinon.spy(), redirect: sinon.spy() };
+    const res: any = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy(),
+      redirect: sinon.spy()
+    };
     const req: any = {
       body: { productId: 'p1', title: 'W', price: 5, description: 'D' },
       file: undefined,
@@ -150,14 +173,22 @@ describe('Admin Controller - postEditProduct', function () {
     };
     let called = false;
     AdminController.postEditProduct(req, res, (err: any) => {
-      if (!called) { called = true; expect(err).to.be.an('error'); done(); }
+      if (!called) {
+        called = true;
+        expect(err).to.be.an('error');
+        done();
+      }
     });
   });
 
   it('should redirect to / when userId does not match', function (done) {
     const fakeProduct = {
-      _id: 'p1', userId: { toString: () => 'other-user' },
-      title: 'Old', price: 5, description: 'D', imageUrl: 'images/x.jpg',
+      _id: 'p1',
+      userId: { toString: () => 'other-user' },
+      title: 'Old',
+      price: 5,
+      description: 'D',
+      imageUrl: 'images/x.jpg',
       save: sinon.stub().resolves()
     };
     sinon.stub(Product, 'findById').returns(Promise.resolve(fakeProduct) as any);
@@ -176,8 +207,12 @@ describe('Admin Controller - postEditProduct', function () {
 
   it('should save and redirect to /admin/products when no image replacement', function (done) {
     const fakeProduct = {
-      _id: 'p1', userId: { toString: () => 'u1' },
-      title: 'Old', price: 5, description: 'D', imageUrl: 'images/x.jpg',
+      _id: 'p1',
+      userId: { toString: () => 'u1' },
+      title: 'Old',
+      price: 5,
+      description: 'D',
+      imageUrl: 'images/x.jpg',
       save: sinon.stub().resolves()
     };
     sinon.stub(Product, 'findById').returns(Promise.resolve(fakeProduct) as any);
@@ -197,8 +232,12 @@ describe('Admin Controller - postEditProduct', function () {
 
   it('should remove old MinIO object and upload new one when image is replaced', function (done) {
     const fakeProduct = {
-      _id: 'p1', userId: { toString: () => 'u1' },
-      title: 'Old', price: 5, description: 'D', imageUrl: 'images/old.jpg',
+      _id: 'p1',
+      userId: { toString: () => 'u1' },
+      title: 'Old',
+      price: 5,
+      description: 'D',
+      imageUrl: 'images/old.jpg',
       save: sinon.stub().resolves()
     };
     sinon.stub(Product, 'findById').returns(Promise.resolve(fakeProduct) as any);
@@ -224,35 +263,42 @@ describe('Admin Controller - postEditProduct', function () {
 describe('Admin Controller - getProducts', function () {
   it('should render admin/products with empty list when no products', function (done) {
     sinon.stub(Product, 'find').returns(Promise.resolve([]) as any);
-    AdminController.getProducts({ user: { _id: 'u1' } } as any, {
-      render(view: string, locals: any) {
-        expect(view).to.equal('admin/products');
-        expect(locals.prods).to.deep.equal([]);
-        done();
-      }
-    } as any, () => {});
+    AdminController.getProducts(
+      { user: { _id: 'u1' } } as any,
+      {
+        render(view: string, locals: any) {
+          expect(view).to.equal('admin/products');
+          expect(locals.prods).to.deep.equal([]);
+          done();
+        }
+      } as any,
+      () => {}
+    );
   });
 
   it('should download from MinIO and render products', function (done) {
     const fakeProduct = { _id: 'p1', imageUrl: 'images/photo.jpg' };
     sinon.stub(Product, 'find').returns(Promise.resolve([fakeProduct]) as any);
     sinon.stub(minioClient, 'fGetObject').resolves();
-    AdminController.getProducts({ user: { _id: 'u1' } } as any, {
-      render(view: string, locals: any) {
-        expect(view).to.equal('admin/products');
-        expect(locals.prods).to.have.length(1);
-        done();
-      }
-    } as any, () => {});
+    AdminController.getProducts(
+      { user: { _id: 'u1' } } as any,
+      {
+        render(view: string, locals: any) {
+          expect(view).to.equal('admin/products');
+          expect(locals.prods).to.have.length(1);
+          done();
+        }
+      } as any,
+      () => {}
+    );
   });
 
   it('should call next when DB rejects', function (done) {
     sinon.stub(Product, 'find').returns(Promise.reject(new Error('db')) as any);
-    AdminController.getProducts(
-      { user: { _id: 'u1' } } as any,
-      {} as any,
-      (err: any) => { expect(err).to.be.an('error'); done(); }
-    );
+    AdminController.getProducts({ user: { _id: 'u1' } } as any, {} as any, (err: any) => {
+      expect(err).to.be.an('error');
+      done();
+    });
   });
 });
 
@@ -267,7 +313,13 @@ describe('Admin Controller - deleteProduct', function () {
     AdminController.deleteProduct(
       { params: { productId: 'p1' }, user: { _id: 'u1' } } as any,
       res,
-      (err: any) => { if (!called) { called = true; expect(err).to.be.an('error'); done(); } }
+      (err: any) => {
+        if (!called) {
+          called = true;
+          expect(err).to.be.an('error');
+          done();
+        }
+      }
     );
   });
 
@@ -280,7 +332,8 @@ describe('Admin Controller - deleteProduct', function () {
     const res: any = { status: sinon.stub().returnsThis(), json: jsonSpy };
     AdminController.deleteProduct(
       { params: { productId: 'p1' }, user: { _id: 'u1' } } as any,
-      res, () => {}
+      res,
+      () => {}
     );
     setTimeout(() => {
       expect(jsonSpy.calledWith({ message: 'Success!' })).to.be.true;
@@ -294,7 +347,8 @@ describe('Admin Controller - deleteProduct', function () {
     const res: any = { status: sinon.stub().returnsThis(), json: jsonSpy };
     AdminController.deleteProduct(
       { params: { productId: 'p1' }, user: { _id: 'u1' } } as any,
-      res, () => {}
+      res,
+      () => {}
     );
     setTimeout(() => {
       expect(jsonSpy.calledWith({ message: 'Deleting product failed.' })).to.be.true;

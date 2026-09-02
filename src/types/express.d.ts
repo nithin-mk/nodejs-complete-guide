@@ -29,6 +29,6 @@ declare global {
 declare module 'express-session' {
   interface SessionData {
     isLoggedIn: boolean;
-    user: any;  // loose — Mongoose doc stored in session
+    user: any; // loose — Mongoose doc stored in session
   }
 }

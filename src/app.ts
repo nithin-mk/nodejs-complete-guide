@@ -115,7 +115,12 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-(mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true } as any) as unknown as Promise<any>)
+(
+  mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  } as any) as unknown as Promise<any>
+)
   .then(() => {
     app.listen(process.env.PORT || 3000, () => {
       console.log('Server running on port', process.env.PORT || 3000);

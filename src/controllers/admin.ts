@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator/check';
 
 import * as fileHelper from '../util/file';
 import Product from '../models/product';
-import { minioClient, bucket } from '../util/minio';
+import { minioClient, bucket, downloadImageIfMissing } from '../util/minio';
 
 export const getAddProduct = (req: Request, res: Response, next: NextFunction): void => {
   res.render('admin/edit-product', {
@@ -58,9 +58,19 @@ export const postAddProduct = (req: Request, res: Response, next: NextFunction):
     example: '5678'
   };
 
-  minioClient.fPutObject(bucket, destinationObject, image.path, metaData)
+  minioClient
+    .fPutObject(bucket, destinationObject, image.path, metaData)
     .then(etag => {
-      console.log('File ' + image.path + ' uploaded as object ' + destinationObject + ' in bucket ' + bucket + ' with ETag ' + etag);
+      console.log(
+        'File ' +
+          image.path +
+          ' uploaded as object ' +
+          destinationObject +
+          ' in bucket ' +
+          bucket +
+          ' with ETag ' +
+          etag
+      );
       const product = new Product({
         title,
         price,
@@ -146,7 +156,8 @@ export const postEditProduct = (req: Request, res: Response, next: NextFunction)
       if (image) {
         const oldImageUrl = product.imageUrl;
         const oldObject = oldImageUrl.split('/')[1];
-        minioClient.removeObject(bucket, oldObject)
+        minioClient
+          .removeObject(bucket, oldObject)
           .then(() => {
             console.log('Removed old object ' + oldObject);
             const newImageUrl = `images/${image.filename}`;
@@ -174,13 +185,7 @@ export const postEditProduct = (req: Request, res: Response, next: NextFunction)
 export const getProducts = (req: Request, res: Response, next: NextFunction): void => {
   Product.find({ userId: req.user._id })
     .then(products => {
-      console.log(products);
-      const downloads = products.map(product => {
-        const destinationObject = product.imageUrl.split('/')[1];
-        return minioClient.fGetObject(bucket, destinationObject, product.imageUrl).then(() => {
-          console.log('Object ' + destinationObject + ' downloaded');
-        });
-      });
+      const downloads = products.map(product => downloadImageIfMissing(product.imageUrl));
       return Promise.all(downloads).then(() => {
         res.render('admin/products', {
           prods: products,
@@ -200,13 +205,12 @@ export const deleteProduct = (req: Request, res: Response, next: NextFunction): 
         return next(new Error('Product not found.'));
       }
       fileHelper.deleteFile(product.imageUrl);
-      return Product.deleteOne({ _id: prodId, userId: req.user._id })
-        .then(() => {
-          const destinationObject = product.imageUrl.split('/')[1];
-          return minioClient.removeObject(bucket, destinationObject).then(() => {
-            console.log('Removed object ' + destinationObject);
-          });
+      return Product.deleteOne({ _id: prodId, userId: req.user._id }).then(() => {
+        const destinationObject = product.imageUrl.split('/')[1];
+        return minioClient.removeObject(bucket, destinationObject).then(() => {
+          console.log('Removed object ' + destinationObject);
         });
+      });
     })
     .then(() => {
       console.log('DESTROYED PRODUCT');

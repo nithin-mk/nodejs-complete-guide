@@ -21,15 +21,22 @@ function makeReq(overrides: any = {}): any {
 function makeRes() {
   let code: number;
   const res: any = {
-    status(c: number) { code = c; return res; },
+    status(c: number) {
+      code = c;
+      return res;
+    },
     render: sinon.spy(),
     redirect: sinon.spy(),
-    statusCode() { return code; }
+    statusCode() {
+      return code;
+    }
   };
   return res;
 }
 
-afterEach(function () { sinon.restore(); });
+afterEach(function () {
+  sinon.restore();
+});
 
 // ── postLogin ──────────────────────────────────────────────────────────────
 
@@ -54,7 +61,11 @@ describe('Auth Controller - postLogin', function () {
   });
 
   it('should 422 render login when validation middleware attaches errors', function () {
-    const req = makeReq({ _validationErrors: [{ param: 'email', msg: 'Enter a valid email', value: '', location: 'body' }] });
+    const req = makeReq({
+      _validationErrors: [
+        { param: 'email', msg: 'Enter a valid email', value: '', location: 'body' }
+      ]
+    });
     const res = makeRes();
     AuthController.postLogin(req, res, () => {});
     expect(res.render.calledWith('auth/login')).to.be.true;
@@ -63,10 +74,18 @@ describe('Auth Controller - postLogin', function () {
   it('should redirect to / after successful login', function (done) {
     const password = 'tester';
     const hash = bcrypt.hashSync(password, 1);
-    sinon.stub(User, 'findOne').returns(Promise.resolve({ password: hash, _id: 'u1', email: 'test@test.com' }) as any);
-    const req = makeReq({ body: { email: 'test@test.com', password }, session: { save: (cb: (e: any) => void) => cb(null) } });
+    sinon
+      .stub(User, 'findOne')
+      .returns(Promise.resolve({ password: hash, _id: 'u1', email: 'test@test.com' }) as any);
+    const req = makeReq({
+      body: { email: 'test@test.com', password },
+      session: { save: (cb: (e: any) => void) => cb(null) }
+    });
     const res = makeRes();
-    res.redirect = function (path: string) { expect(path).to.equal('/'); done(); };
+    res.redirect = function (path: string) {
+      expect(path).to.equal('/');
+      done();
+    };
     AuthController.postLogin(req, res, () => {});
   });
 
@@ -94,7 +113,7 @@ describe('Auth Controller - GET pages', function () {
   });
 
   it('getLogin should pass flash error message when present', function () {
-    const req = makeReq({ flash: (key: string) => key === 'error' ? ['Bad credentials'] : [] });
+    const req = makeReq({ flash: (key: string) => (key === 'error' ? ['Bad credentials'] : []) });
     const res = makeRes();
     AuthController.getLogin(req, res, () => {});
     expect(res.render.firstCall.args[1].errorMessage).to.equal('Bad credentials');
@@ -119,7 +138,9 @@ describe('Auth Controller - postSignup', function () {
   it('should 422 render signup when validation errors present', function () {
     const req = makeReq({
       body: { email: 'bad', password: '', confirmPassword: '' },
-      _validationErrors: [{ param: 'email', msg: 'Enter a valid email', value: 'bad', location: 'body' }]
+      _validationErrors: [
+        { param: 'email', msg: 'Enter a valid email', value: 'bad', location: 'body' }
+      ]
     });
     const res = makeRes();
     AuthController.postSignup(req, res, () => {});
@@ -128,18 +149,27 @@ describe('Auth Controller - postSignup', function () {
 
   it('should redirect to /login after successful signup', function (done) {
     sinon.stub(User.prototype, 'save').returns(Promise.resolve() as any);
-    const req = makeReq({ body: { email: 'new@test.com', password: 'password123', confirmPassword: 'password123' } });
+    const req = makeReq({
+      body: { email: 'new@test.com', password: 'password123', confirmPassword: 'password123' }
+    });
     const res = makeRes();
-    res.redirect = function (path: string) { expect(path).to.equal('/login'); done(); };
+    res.redirect = function (path: string) {
+      expect(path).to.equal('/login');
+      done();
+    };
     AuthController.postSignup(req, res, () => {});
   });
 
   it('should call next when save throws', function (done) {
     sinon.stub(User.prototype, 'save').returns(Promise.reject(new Error('save fail')) as any);
-    AuthController.postSignup(makeReq({ body: { email: 'x@x.com', password: 'pw', confirmPassword: 'pw' } }), makeRes(), (err: any) => {
-      expect(err).to.be.an('error');
-      done();
-    });
+    AuthController.postSignup(
+      makeReq({ body: { email: 'x@x.com', password: 'pw', confirmPassword: 'pw' } }),
+      makeRes(),
+      (err: any) => {
+        expect(err).to.be.an('error');
+        done();
+      }
+    );
   });
 });
 
@@ -174,7 +204,10 @@ describe('Auth Controller - postLogout', function () {
   it('should destroy the session and redirect to /', function (done) {
     const req = makeReq({ session: { destroy: (cb: (e: any) => void) => cb(null) } });
     const res = makeRes();
-    res.redirect = function (path: string) { expect(path).to.equal('/'); done(); };
+    res.redirect = function (path: string) {
+      expect(path).to.equal('/');
+      done();
+    };
     AuthController.postLogout(req, res, () => {});
   });
 });
@@ -187,16 +220,26 @@ describe('Auth Controller - postReset', function () {
     sinon.stub(User, 'findOne').returns(Promise.resolve(null) as any);
     const req = makeReq({ body: { email: 'notfound@test.com' }, flash: sinon.spy() });
     const res = makeRes();
-    res.redirect = function (path: string) { expect(path).to.equal('/reset'); done(); };
+    res.redirect = function (path: string) {
+      expect(path).to.equal('/reset');
+      done();
+    };
     AuthController.postReset(req, res, () => {});
   });
 
   it('should redirect to / when user is found and save succeeds', function (done) {
-    const fakeUser = { resetToken: '' as any, resetTokenExpiration: null as any, save: sinon.stub().resolves() };
+    const fakeUser = {
+      resetToken: '' as any,
+      resetTokenExpiration: null as any,
+      save: sinon.stub().resolves()
+    };
     sinon.stub(User, 'findOne').returns(Promise.resolve(fakeUser) as any);
     const req = makeReq({ body: { email: 'found@test.com' } });
     const res = makeRes();
-    res.redirect = function (path: string) { expect(path).to.equal('/'); done(); };
+    res.redirect = function (path: string) {
+      expect(path).to.equal('/');
+      done();
+    };
     AuthController.postReset(req, res, () => {});
   });
 });
@@ -212,9 +255,14 @@ describe('Auth Controller - postNewPassword', function () {
       save: sinon.stub().resolves()
     };
     sinon.stub(User, 'findOne').returns(Promise.resolve(fakeUser) as any);
-    const req = makeReq({ body: { password: 'newpassword123', userId: 'u1', passwordToken: 'tok' } });
+    const req = makeReq({
+      body: { password: 'newpassword123', userId: 'u1', passwordToken: 'tok' }
+    });
     const res = makeRes();
-    res.redirect = function (path: string) { expect(path).to.equal('/login'); done(); };
+    res.redirect = function (path: string) {
+      expect(path).to.equal('/login');
+      done();
+    };
     AuthController.postNewPassword(req, res, () => {});
   });
 
@@ -223,7 +271,10 @@ describe('Auth Controller - postNewPassword', function () {
     AuthController.postNewPassword(
       makeReq({ body: { password: 'pw', userId: 'u1', passwordToken: 'tok' } }),
       makeRes(),
-      (err: any) => { expect(err).to.be.an('error'); done(); }
+      (err: any) => {
+        expect(err).to.be.an('error');
+        done();
+      }
     );
   });
 });

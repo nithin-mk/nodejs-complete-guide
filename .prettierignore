@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+coverage
+public/js
+playwright-report
+test-results
+data
+images
+package-lock.json
+views/
+.codex/
+.vscode/
+.claude/
+.mcp.json
+*.log

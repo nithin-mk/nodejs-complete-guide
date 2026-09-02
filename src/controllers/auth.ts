@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport(
 );
 
 export const getLogin = (req: Request, res: Response, next: NextFunction): void => {
-  let message: string | null = (req.flash('error') as string[])[0] || null;
+  const message: string | null = (req.flash('error') as string[])[0] || null;
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
@@ -28,7 +28,7 @@ export const getLogin = (req: Request, res: Response, next: NextFunction): void 
 };
 
 export const getSignup = (req: Request, res: Response, next: NextFunction): void => {
-  let message: string | null = (req.flash('error') as string[])[0] || null;
+  const message: string | null = (req.flash('error') as string[])[0] || null;
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'Signup',
@@ -66,7 +66,8 @@ export const postLogin = (req: Request, res: Response, next: NextFunction): void
         });
         return;
       }
-      bcrypt.compare(password, user.password)
+      bcrypt
+        .compare(password, user.password)
         .then(doMatch => {
           if (doMatch) {
             req.session.isLoggedIn = true;
@@ -110,7 +111,8 @@ export const postSignup = (req: Request, res: Response, next: NextFunction): voi
     return;
   }
 
-  bcrypt.hash(password, 12)
+  bcrypt
+    .hash(password, 12)
     .then(hashedPassword => {
       const user = new User({
         email,
@@ -133,7 +135,7 @@ export const postLogout = (req: Request, res: Response, next: NextFunction): voi
 };
 
 export const getReset = (req: Request, res: Response, next: NextFunction): void => {
-  let message: string | null = (req.flash('error') as string[])[0] || null;
+  const message: string | null = (req.flash('error') as string[])[0] || null;
   res.render('auth/reset', {
     path: '/reset',
     pageTitle: 'Reset Password',
@@ -183,7 +185,7 @@ export const getNewPassword = (req: Request, res: Response, next: NextFunction):
       if (!user) {
         return next(new Error('Invalid or expired reset token.'));
       }
-      let message: string | null = (req.flash('error') as string[])[0] || null;
+      const message: string | null = (req.flash('error') as string[])[0] || null;
       res.render('auth/new-password', {
         path: '/new-password',
         pageTitle: 'New Password',
