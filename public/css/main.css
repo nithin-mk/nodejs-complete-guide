@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700');
 
+:root {
+  /* Shared by .mobile-nav and .backdrop so the backdrop only ever covers
+     the strip actually left visible beside the drawer — otherwise a click
+     at the backdrop's own center (its default click target) can land on
+     the opaque drawer instead of the backdrop underneath it. */
+  --mobile-nav-width: min(30rem, 90%);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -79,9 +87,8 @@ form {
 }
 
 .mobile-nav {
-  width: 30rem;
+  width: var(--mobile-nav-width);
   height: 100vh;
-  max-width: 90%;
   position: fixed;
   left: 0;
   top: 0;
@@ -154,8 +161,8 @@ form {
 .backdrop {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: var(--mobile-nav-width);
+  right: 0;
   height: 100vh;
   background: rgba(0, 0, 0, 0.5);
   z-index: 5;
